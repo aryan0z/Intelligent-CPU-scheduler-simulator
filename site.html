@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU Scheduler Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        .gantt-bar {
+            height: 30px;
+            border-radius: 4px;
+            margin: 2px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .process-table tr:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .blink {
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-amber-50 text-gray-900 min-h-screen p-6">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-12 animate__animated animate__fadeIn">
+            <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">CPU Scheduler Simulator</h1>
+            <p class="text-xl text-gray-700 max-w-3xl mx-auto">
+                Interactive visualization of CPU scheduling algorithms with real-time results
+            </p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Control Panel -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-2xl border-l-4 border-amber-600">
+                <h2 class="text-2xl font-semibold mb-6 flex items-center">
+                    <span class="w-6 h-6 bg-amber-600 rounded-full mr-3"></span>
+                    Process Control
+                </h2>
+                
+                <div class="space-y-4 mb-6">
+                    <input type="number" id="arrivalTime" placeholder="Arrival Time" 
+                           class="w-full p-3 rounded-lg bg-amber-50 border border-amber-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/50"
+                           min="0" value="0">
+                    
+                    <input type="number" id="burstTime" placeholder="Burst Time" 
+                           class="w-full p-3 rounded-lg bg-amber-50 border border-amber-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/50"
+                           min="1" value="1">
+                    
+                    <input type="number" id="priority" placeholder="Priority (Lower = Higher)" 
+                           class="w-full p-3 rounded-lg bg-amber-50 border border-amber-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/50"
+                           min="0" value="0">
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="addProcess()" 
+                                class="bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all transform hover:scale-[1.02]">
+                            Add Process
+                        </button>
+                        <button onclick="addRandomProcess()" 
+                                class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-3 px-6 rounded-lg shadow-lg transition-all transform hover:scale-[1.02]">
+                            Random Process
+                        </button>
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-semibold mb-4 flex items-center">
+                    <span class="w-6 h-6 bg-amber-800 rounded-full mr-3"></span>
+                    Algorithm Settings
+                </h2>
+                
+                <select id="algorithm" onchange="toggleTimeQuantum()" 
+                        class="w-full p-3 rounded-lg bg-amber-50 border border-amber-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/50 mb-4">
+                    <option value="fcfs">First Come First Serve (FCFS)</option>
+                    <option value="sjf">Shortest Job First (SJF)</option>
+                    <option value="sjf_preemptive">SJF (Preemptive)</option>
+                    <option value="round_robin">Round Robin</option>
+                    <option value="priority">Priority Scheduling</option>
+                    <option value="priority_preemptive">Priority (Preemptive)</option>
+                </select>
+                
+                <div id="timeQuantumContainer" class="hidden mb-6">
+                    <label class="block text-gray-700 mb-2">Time Quantum</label>
+                    <input type="number" id="timeQuantum" placeholder="Time Quantum" 
+                           class="w-full p-3 rounded-lg bg-amber-50 border border-amber-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/50"
+                           min="1" value="2">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="runSimulation()" 
+                            class="bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all transform hover:scale-[1.02]">
+                        Run Simulation
+                    </button>
+                    
+                    <button id="clearAllButton" onclick="clearProcesses()" 
+                            class="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all transform hover:scale-[1.02] hidden">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Process List & Results -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Process List -->
+                <div id="processList" class="bg-white p-6 rounded-xl shadow-2xl border-l-4 border-amber-800 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold flex items-center">
+                            <span class="w-6 h-6 bg-amber-800 rounded-full mr-3"></span>
+                            Process Queue
+                        </h2>
+                        <div class="text-gray-700">
+                            Total Processes: <span id="processCount" class="font-bold">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full process-table">
+                            <thead>
+                                <tr class="text-left border-b border-amber-200">
+                                    <th class="p-3">Process</th>
+                                    <th class="p-3">Arrival</th>
+                                    <th class="p-3">Burst</th>
+                                    <th class="p-3">Priority</th>
+                                    <th class="p-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="processTable" class="divide-y divide-amber-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="results" class="space-y-6 hidden">
+                    <!-- Gantt Chart -->
+                    <div class="bg-white p-6 rounded-xl shadow-2xl">
+                        <h2 class="text-2xl font-semibold mb-6 flex items-center">
+                            <span class="w-6 h-6 bg-amber-600 rounded-full mr-3"></span>
+                            Execution Timeline
+                        </h2>
+                        <div id="timelineVisualization" class="bg-amber-50 p-4 rounded-lg mb-4">
+                            <!-- Timeline will be generated here -->
+                        </div>
+                        <div class="bg-amber-50 p-4 rounded-lg">
+                            <canvas id="ganttChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Results Table -->
+                    <div class="bg-white p-6 rounded-xl shadow-2xl">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-semibold flex items-center">
+                                <span class="w-6 h-6 bg-amber-800 rounded-full mr-3"></span>
+                                Performance Metrics
+                            </h2>
+                            <div id="avgMetrics" class="text-gray-700 hidden">
+                                Avg TAT: <span id="avgTAT" class="font-bold">0</span> | 
+                                Avg WT: <span id="avgWT" class="font-bold">0</span>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full process-table">
+                                <thead>
+                                    <tr class="text-left border-b border-amber-200">
+                                        <th class="p-3">Process</th>
+                                        <th class="p-3">Arrival</th>
+                                        <th class="p-3">Burst</th>
+                                        <th class="p-3">Priority</th>
+                                        <th class="p-3">Completion</th>
+                                        <th class="p-3">TAT</th>
+                                        <th class="p-3">WT</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultsTable" class="divide-y divide-amber-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let processes = [];
+        let chartInstance = null;
+        let processCounter = 1;
+
+        function addProcess() {
+            let arrivalTime = parseInt(document.getElementById("arrivalTime").value) || 0;
+            let burstTime = parseInt(document.getElementById("burstTime").value) || 1;
+            let priority = parseInt(document.getElementById("priority").value) || 0;
+            let processId = "P" + processCounter++;
+            
+            if (burstTime <= 0) {
+                alert("Burst time must be greater than 0");
+                return;
+            }
+
+            processes.push({ 
+                processId, 
+                arrivalTime, 
+                burstTime, 
+                priority,
+                remainingTime: burstTime  // For preemptive algorithms
+            });
+            
+            updateProcessTable();
+            document.getElementById("processList").classList.remove("hidden");
+            document.getElementById("clearAllButton").classList.remove("hidden");
+            updateProcessCount();
+            
+            // Clear inputs but keep values for quick additions
+            document.getElementById("burstTime").value = "";
+            document.getElementById("priority").value = "";
+        }
+
+        function addRandomProcess() {
+            document.getElementById("arrivalTime").value = Math.floor(Math.random() * 10);
+            document.getElementById("burstTime").value = Math.floor(Math.random() * 10) + 1;
+            document.getElementById("priority").value = Math.floor(Math.random() * 5);
+            addProcess();
+        }
+
+        function updateProcessTable() {
+            let tableBody = document.getElementById("processTable");
+            tableBody.innerHTML = "";
+            
+            // Sort by arrival time for display
+            processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
+            
+            processes.forEach((proc, index) => {
+                let row = `<tr>
+                    <td class='p-3 font-mono font-bold'>${proc.processId}</td>
+                    <td class='p-3'>${proc.arrivalTime}</td>
+                    <td class='p-3'>${proc.burstTime}</td>
+                    <td class='p-3'>${proc.priority}</td>
+                    <td class='p-3 flex space-x-3'>
+                        <button onclick="removeProcess(${index})" class="text-red-600 hover:text-red-800">
+                            Remove
+                        </button>
+                        <button onclick="editProcess(${index})" class="text-amber-600 hover:text-amber-800">
+                            Edit
+                        </button>
+                    </td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        function updateProcessCount() {
+            document.getElementById("processCount").textContent = processes.length;
+        }
+
+        function removeProcess(index) {
+            processes.splice(index, 1);
+            updateProcessTable();
+            updateProcessCount();
+            if (processes.length === 0) {
+                document.getElementById("processList").classList.add("hidden");
+                document.getElementById("clearAllButton").classList.add("hidden");
+                document.getElementById("results").classList.add("hidden");
+            }
+        }
+
+        function editProcess(index) {
+            let proc = processes[index];
+            document.getElementById("arrivalTime").value = proc.arrivalTime;
+            document.getElementById("burstTime").value = proc.burstTime;
+            document.getElementById("priority").value = proc.priority;
+            removeProcess(index);
+        }
+
+        function clearProcesses() {
+            processes = [];
+            processCounter = 1;
+            updateProcessTable();
+            updateProcessCount();
+            document.getElementById("processList").classList.add("hidden");
+            document.getElementById("clearAllButton").classList.add("hidden");
+            document.getElementById("results").classList.add("hidden");
+        }
+
+        function toggleTimeQuantum() {
+            const algorithm = document.getElementById("algorithm").value;
+            const container = document.getElementById("timeQuantumContainer");
+            if (algorithm === "round_robin") {
+                container.classList.remove("hidden");
+            } else {
+                container.classList.add("hidden");
+            }
+        }
+
+        function runSimulation() {
+            if (processes.length === 0) {
+                alert("Please add at least one process");
+                return;
+            }
+
+            // Show results section
+            document.getElementById("results").classList.remove("hidden");
+            
+            // Reset remaining times for preemptive algorithms
+            processes.forEach(proc => {
+                proc.remainingTime = proc.burstTime;
+            });
+
+            // Run selected algorithm
+            const algorithm = document.getElementById("algorithm").value;
+            let results;
+            
+            switch(algorithm) {
+                case "fcfs":
+                    results = runFCFS();
+                    break;
+                case "sjf":
+                    results = runSJF(false);
+                    break;
+                case "sjf_preemptive":
+                    results = runSJF(true);
+                    break;
+                case "round_robin":
+                    const quantum = parseInt(document.getElementById("timeQuantum").value) || 2;
+                    results = runRoundRobin(quantum);
+                    break;
+                case "priority":
+                    results = runPriority(false);
+                    break;
+                case "priority_preemptive":
+                    results = runPriority(true);
+                    break;
+                default:
+                    results = runFCFS();
+            }
+            
+            // Render results
+            renderResultsTable(results);
+            renderTimeline(results.timeline);
+            renderGanttChart(results.timeline);
+        }
+
+        function runFCFS() {
+            let timeline = [];
+            let currentTime = 0;
+            let completedProcesses = [];
+            
+            // Sort by arrival time
+            const sortedProcesses = [...processes].sort((a, b) => a.arrivalTime - b.arrivalTime);
+            
+            sortedProcesses.forEach(proc => {
+                currentTime = Math.max(currentTime, proc.arrivalTime);
+                const startTime = currentTime;
+                currentTime += proc.burstTime;
+                
+                timeline.push({
+                    processId: proc.processId,
+                    start: startTime,
+                    end: currentTime,
+                    burst: proc.burstTime
+                });
+                
+                completedProcesses.push({
+                    ...proc,
+                    completionTime: currentTime,
+                    turnaroundTime: currentTime - proc.arrivalTime,
+                    waitingTime: (currentTime - proc.arrivalTime) - proc.burstTime
+                });
+            });
+            
+            return {
+                timeline,
+                processes: completedProcesses
+            };
+        }
+
+        function runSJF(preemptive = false) {
+    let timeline = [];
+    let currentTime = 0;
+    let completedProcesses = [];
+    let readyQueue = [];
+    let processMap = {};
+    
+    // Create a map of processes for easy access
+    processes.forEach(proc => {
+        processMap[proc.processId] = {...proc};
+    });
+    
+    while (Object.keys(processMap).length > 0 || readyQueue.length > 0) {
+        // Add arriving processes to ready queue
+        Object.keys(processMap).forEach(pid => {
+            const proc = processMap[pid];
+            if (proc.arrivalTime <= currentTime) {
+                readyQueue.push({...proc});
+                delete processMap[pid];
+            }
+        });
+        
+        if (readyQueue.length === 0) {
+            // No processes ready, advance time
+            currentTime++;
+            continue;
+        }
+        
+        // Sort ready queue based on remaining time (SJF)
+        readyQueue.sort((a, b) => {
+            if (a.remainingTime !== b.remainingTime) {
+                return a.remainingTime - b.remainingTime;
+            }
+            return a.arrivalTime - b.arrivalTime;
+        });
+        
+        const currentProc = readyQueue[0];
+        
+        if (preemptive) {
+            // Execute for 1 unit of time
+            const startTime = currentTime;
+            currentTime++;
+            currentProc.remainingTime--;
+            
+            timeline.push({
+                processId: currentProc.processId,
+                start: startTime,
+                end: currentTime,
+                burst: 1
+            });
+            
+            if (currentProc.remainingTime === 0) {
+                // Process completed
+                completedProcesses.push({
+                    ...currentProc,
+                    completionTime: currentTime,
+                    turnaroundTime: currentTime - currentProc.arrivalTime,
+                    waitingTime: (currentTime - currentProc.arrivalTime) - currentProc.burstTime
+                });
+                readyQueue.shift();
+            } else {
+                // Process still has remaining time, may be preempted
+                // Don't remove from queue - will be re-sorted next iteration
+            }
+        } else {
+            // Non-preemptive - execute entire burst
+            const startTime = currentTime;
+            currentTime += currentProc.remainingTime;
+            currentProc.remainingTime = 0;
+            
+            timeline.push({
+                processId: currentProc.processId,
+                start: startTime,
+                end: currentTime,
+                burst: currentProc.burstTime
+            });
+            
+            completedProcesses.push({
+                ...currentProc,
+                completionTime: currentTime,
+                turnaroundTime: currentTime - currentProc.arrivalTime,
+                waitingTime: (currentTime - currentProc.arrivalTime) - currentProc.burstTime
+            });
+            
+            readyQueue.shift();
+        }
+    }
+    
+    return {
+        timeline,
+        processes: completedProcesses
+    };
+}
+
+
+        function runRoundRobin(quantum) {
+            let timeline = [];
+            let currentTime = 0;
+            let completedProcesses = [];
+            let readyQueue = [];
+            let processMap = {};
+            
+            // Create a map of processes for easy access
+            processes.forEach(proc => {
+                processMap[proc.processId] = {...proc};
+            });
+            
+            // Initialize ready queue with processes that arrive at time 0
+            processes.forEach(proc => {
+                if (proc.arrivalTime === 0) {
+                    readyQueue.push({...proc});
+                }
+            });
+            
+            while (readyQueue.length > 0 || Object.keys(processMap).length > 0) {
+                // Add arriving processes to ready queue
+                Object.keys(processMap).forEach(pid => {
+                    const proc = processMap[pid];
+                    if (proc.arrivalTime <= currentTime && !readyQueue.some(p => p.processId === pid)) {
+                        readyQueue.push({...proc});
+                    }
+                });
+                
+                if (readyQueue.length === 0) {
+                    // No processes ready, advance time
+                    currentTime++;
+                    continue;
+                }
+                
+                const currentProc = readyQueue.shift();
+                const executionTime = Math.min(quantum, currentProc.remainingTime);
+                const startTime = currentTime;
+                
+                currentTime += executionTime;
+                currentProc.remainingTime -= executionTime;
+                
+                timeline.push({
+                    processId: currentProc.processId,
+                    start: startTime,
+                    end: currentTime,
+                    burst: executionTime
+                });
+                
+                if (currentProc.remainingTime === 0) {
+                    // Process completed
+                    completedProcesses.push({
+                        ...currentProc,
+                        completionTime: currentTime,
+                        turnaroundTime: currentTime - currentProc.arrivalTime,
+                        waitingTime: (currentTime - currentProc.arrivalTime) - currentProc.burstTime
+                    });
+                    delete processMap[currentProc.processId];
+                } else {
+                    // Process still has remaining time, put back in queue
+                    readyQueue.push(currentProc);
+                }
+            }
+            
+            return {
+                timeline,
+                processes: completedProcesses
+            };
+        }
+
+        function runPriority(preemptive = false) {
+    let timeline = [];
+    let currentTime = 0;
+    let completedProcesses = [];
+    let readyQueue = [];
+    let processMap = {};
+    
+    // Create a map of processes for easy access
+    processes.forEach(proc => {
+        processMap[proc.processId] = {...proc};
+    });
+    
+    while (Object.keys(processMap).length > 0 || readyQueue.length > 0) {
+        // Add arriving processes to ready queue
+        Object.keys(processMap).forEach(pid => {
+            const proc = processMap[pid];
+            if (proc.arrivalTime <= currentTime) {
+                readyQueue.push({...proc});
+                delete processMap[pid];
+            }
+        });
+        
+        if (readyQueue.length === 0) {
+            // No processes ready, advance time
+            currentTime++;
+            continue;
+        }
+        
+        // Sort ready queue based on priority (lower number = higher priority)
+        readyQueue.sort((a, b) => {
+            if (a.priority !== b.priority) {
+                return a.priority - b.priority;
+            }
+            return a.arrivalTime - b.arrivalTime;
+        });
+        
+        const currentProc = readyQueue[0];
+        
+        if (preemptive) {
+            // Execute for 1 unit of time
+            const startTime = currentTime;
+            currentTime++;
+            currentProc.remainingTime--;
+            
+            timeline.push({
+                processId: currentProc.processId,
+                start: startTime,
+                end: currentTime,
+                burst: 1
+            });
+            
+            if (currentProc.remainingTime === 0) {
+                // Process completed
+                completedProcesses.push({
+                    ...currentProc,
+                    completionTime: currentTime,
+                    turnaroundTime: currentTime - currentProc.arrivalTime,
+                    waitingTime: (currentTime - currentProc.arrivalTime) - currentProc.burstTime
+                });
+                readyQueue.shift();
+            } else {
+                // Process still has remaining time, may be preempted
+                // Don't remove from queue - will be re-sorted next iteration
+            }
+        } else {
+            // Non-preemptive - execute entire burst
+            const startTime = currentTime;
+            currentTime += currentProc.remainingTime;
+            currentProc.remainingTime = 0;
+            
+            timeline.push({
+                processId: currentProc.processId,
+                start: startTime,
+                end: currentTime,
+                burst: currentProc.burstTime
+            });
+            
+            completedProcesses.push({
+                ...currentProc,
+                completionTime: currentTime,
+                turnaroundTime: currentTime - currentProc.arrivalTime,
+                waitingTime: (currentTime - currentProc.arrivalTime) - currentProc.burstTime
+            });
+            
+            readyQueue.shift();
+        }
+    }
+    
+    return {
+        timeline,
+        processes: completedProcesses
+    };
+}
+
+        function renderResultsTable(results) {
+            let tableBody = document.getElementById("resultsTable");
+            tableBody.innerHTML = "";
+            
+            let totalTAT = 0;
+            let totalWT = 0;
+            
+            results.processes.forEach(proc => {
+                totalTAT += proc.turnaroundTime;
+                totalWT += proc.waitingTime;
+
+                let row = `<tr>
+                    <td class='p-3 font-mono font-bold'>${proc.processId}</td>
+                    <td class='p-3'>${proc.arrivalTime}</td>
+                    <td class='p-3'>${proc.burstTime}</td>
+                    <td class='p-3'>${proc.priority}</td>
+                    <td class='p-3'>${proc.completionTime}</td>
+                    <td class='p-3'>${proc.turnaroundTime}</td>
+                    <td class='p-3'>${proc.waitingTime}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+
+            // Update average metrics
+            document.getElementById("avgTAT").textContent = (totalTAT/results.processes.length).toFixed(2);
+            document.getElementById("avgWT").textContent = (totalWT/results.processes.length).toFixed(2);
+            document.getElementById("avgMetrics").classList.remove("hidden");
+        }
+
+        function renderTimeline(timeline) {
+            const container = document.getElementById("timelineVisualization");
+            container.innerHTML = "";
+            
+            if (timeline.length === 0) return;
+            
+            const maxTime = Math.max(...timeline.map(item => item.end));
+            const scale = 100 / maxTime;
+            
+            timeline.forEach(item => {
+                const width = (item.end - item.start) * scale;
+                const marginLeft = item.start * scale;
+                
+                const color = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                
+                const bar = document.createElement("div");
+                bar.className = "gantt-bar blink";
+                bar.style.width = `${width}%`;
+                bar.style.marginLeft = `${marginLeft}%`;
+                bar.style.backgroundColor = color;
+                bar.innerHTML = `
+                    <span class="text-xs">${item.processId} (${item.burst}ms)</span>
+                `;
+                
+                container.appendChild(bar);
+            });
+            
+            // Add time markers
+            const timeMarkers = document.createElement("div");
+            timeMarkers.className = "flex justify-between text-xs text-gray-700 mt-2";
+            
+            for (let i = 0; i <= maxTime; i++) {
+                const marker = document.createElement("div");
+                marker.textContent = i;
+                timeMarkers.appendChild(marker);
+            }
+            
+            container.appendChild(timeMarkers);
+        }
+
+        function renderGanttChart(timeline) {
+            const ctx = document.getElementById('ganttChart').getContext('2d');
+            
+            // Destroy previous chart if exists
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            
+            // Prepare data for chart
+            const labels = timeline.map(item => `${item.processId} (${item.start}-${item.end})`);
+            const durations = timeline.map(item => item.end - item.start);
+            const colors = timeline.map((_, i) => {
+                const hue = (i * 360 / timeline.length) % 360;
+                return `hsl(${hue}, 70%, 60%)`;
+            });
+            
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Execution Time',
+                        data: durations,
+                        backgroundColor: colors,
+                        borderColor: colors.map(c => c.replace('0.6', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Duration: ${context.raw} ms`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Time (ms)',
+                                color: '#6b7280'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                color: '#6b7280'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Process Execution',
+                                color: '#6b7280'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                color: '#6b7280'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

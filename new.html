@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - CPU Scheduler</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+</head>
+<body class="bg-amber-50 text-gray-900 min-h-screen">
+    <div class="max-w-6xl mx-auto px-6 py-12">
+        <!-- Hero Section -->
+        <div class="text-center mb-16 animate__animated animate__fadeIn">
+            <h1 class="text-5xl font-bold mb-6 bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">CPU Scheduler Simulator</h1>
+            <p class="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
+                Master CPU scheduling through interactive visualizations! Explore different algorithms with real-time simulations and detailed analytics.
+            </p>
+        </div>
+        
+        <!-- Features Grid -->
+        <div class="grid md:grid-cols-2 gap-8 mb-16">
+            <!-- What is CPU Scheduling Card -->
+            <div class="bg-white p-8 rounded-xl shadow-2xl border-l-4 border-amber-600 transform transition-all hover:scale-[1.02] hover:shadow-amber-500/20">
+                <h2 class="text-2xl font-semibold mb-4 flex items-center">
+                    <span class="w-6 h-6 bg-amber-600 rounded-full mr-3"></span>
+                    What is CPU Scheduling?
+                </h2>
+                <p class="text-gray-700 leading-relaxed">
+                    CPU scheduling is the brain of process management, efficiently allocating CPU time to multiple processes. Our simulator brings this complex concept to life with clear visualizations and real-time examples.
+                </p>
+            </div>
+            
+            <!-- Why Use This Simulator Card -->
+            <div class="bg-white p-8 rounded-xl shadow-2xl border-l-4 border-amber-800 transform transition-all hover:scale-[1.02] hover:shadow-amber-700/20">
+                <h2 class="text-2xl font-semibold mb-4 flex items-center">
+                    <span class="w-6 h-6 bg-amber-800 rounded-full mr-3"></span>
+                    Why Use This Simulator?
+                </h2>
+                <p class="text-gray-700 leading-relaxed">
+                    Get hands-on with dynamic Gantt charts, compare algorithm performance metrics, and visualize queue operations - all designed to make learning scheduling algorithms intuitive and memorable.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Algorithms Section -->
+        <div class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-10 bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
+                Scheduling Algorithms
+            </h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- FCFS Card -->
+                <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-amber-500/30 transition-all hover:-translate-y-2">
+                    <div class="text-amber-600 text-4xl mb-4">1</div>
+                    <h3 class="text-xl font-semibold mb-2">First Come First Serve</h3>
+                    <p class="text-gray-700 text-sm">Processes execute in arrival order - simple but can lead to convoy effect.</p>
+                </div>
+                
+                <!-- SJF Card -->
+                <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-amber-700/30 transition-all hover:-translate-y-2">
+                    <div class="text-amber-800 text-4xl mb-4">2</div>
+                    <h3 class="text-xl font-semibold mb-2">Shortest Job First</h3>
+                    <p class="text-gray-700 text-sm">Prioritizes quick tasks - minimizes average waiting time.</p>
+                </div>
+                
+                <!-- RR Card -->
+                <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-amber-500/30 transition-all hover:-translate-y-2">
+                    <div class="text-amber-600 text-4xl mb-4">3</div>
+                    <h3 class="text-xl font-semibold mb-2">Round Robin</h3>
+                    <p class="text-gray-700 text-sm">Fair time-sliced approach - excellent for time-sharing systems.</p>
+                </div>
+                
+                <!-- Priority Card -->
+                <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-amber-700/30 transition-all hover:-translate-y-2">
+                    <div class="text-amber-800 text-4xl mb-4">4</div>
+                    <h3 class="text-xl font-semibold mb-2">Priority Scheduling</h3>
+                    <p class="text-gray-700 text-sm">Higher priority processes execute first - can use aging to prevent starvation.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CTA Button -->
+        <div class="text-center">
+            <a href="site.html" class="inline-block">
+                <button class="bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg transition-all transform hover:scale-105 hover:shadow-amber-500/30 animate__animated animate__pulse animate__infinite animate__slower">
+                    Launch Simulator Now
+                    <span class="ml-2">→</span>
+                </button>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

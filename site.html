@@ -34,7 +34,7 @@
 </head>
 <body class="bg-amber-50 text-gray-900 min-h-screen p-6">
     <div class="max-w-6xl mx-auto">
-        <!-- Header -->
+        
         <div class="text-center mb-12 animate__animated animate__fadeIn">
             <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">CPU Scheduler Simulator</h1>
             <p class="text-xl text-gray-700 max-w-3xl mx-auto">
@@ -42,9 +42,9 @@
             </p>
         </div>
 
-        <!-- Main Content -->
+        
         <div class="grid lg:grid-cols-3 gap-8">
-            <!-- Control Panel -->
+           
             <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-2xl border-l-4 border-amber-600">
                 <h2 class="text-2xl font-semibold mb-6 flex items-center">
                     <span class="w-6 h-6 bg-amber-600 rounded-full mr-3"></span>
@@ -111,9 +111,8 @@
                 </div>
             </div>
 
-            <!-- Process List & Results -->
             <div class="lg:col-span-2 space-y-8">
-                <!-- Process List -->
+              
                 <div id="processList" class="bg-white p-6 rounded-xl shadow-2xl border-l-4 border-amber-800 hidden">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-semibold flex items-center">
@@ -141,23 +140,23 @@
                     </div>
                 </div>
 
-                <!-- Results Section -->
+              
                 <div id="results" class="space-y-6 hidden">
-                    <!-- Gantt Chart -->
+                    
                     <div class="bg-white p-6 rounded-xl shadow-2xl">
                         <h2 class="text-2xl font-semibold mb-6 flex items-center">
                             <span class="w-6 h-6 bg-amber-600 rounded-full mr-3"></span>
                             Execution Timeline
                         </h2>
                         <div id="timelineVisualization" class="bg-amber-50 p-4 rounded-lg mb-4">
-                            <!-- Timeline will be generated here -->
+                          
                         </div>
                         <div class="bg-amber-50 p-4 rounded-lg">
                             <canvas id="ganttChart"></canvas>
                         </div>
                     </div>
 
-                    <!-- Results Table -->
+                   
                     <div class="bg-white p-6 rounded-xl shadow-2xl">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-semibold flex items-center">
@@ -212,7 +211,7 @@
                 arrivalTime, 
                 burstTime, 
                 priority,
-                remainingTime: burstTime  // For preemptive algorithms
+                remainingTime: burstTime  
             });
             
             updateProcessTable();
@@ -220,7 +219,7 @@
             document.getElementById("clearAllButton").classList.remove("hidden");
             updateProcessCount();
             
-            // Clear inputs but keep values for quick additions
+         
             document.getElementById("burstTime").value = "";
             document.getElementById("priority").value = "";
         }
@@ -236,7 +235,7 @@
             let tableBody = document.getElementById("processTable");
             tableBody.innerHTML = "";
             
-            // Sort by arrival time for display
+          
             processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
             
             processes.forEach((proc, index) => {
@@ -307,15 +306,15 @@
                 return;
             }
 
-            // Show results section
+         
             document.getElementById("results").classList.remove("hidden");
             
-            // Reset remaining times for preemptive algorithms
+       
             processes.forEach(proc => {
                 proc.remainingTime = proc.burstTime;
             });
 
-            // Run selected algorithm
+           
             const algorithm = document.getElementById("algorithm").value;
             let results;
             
@@ -343,7 +342,6 @@
                     results = runFCFS();
             }
             
-            // Render results
             renderResultsTable(results);
             renderTimeline(results.timeline);
             renderGanttChart(results.timeline);
@@ -354,7 +352,7 @@
             let currentTime = 0;
             let completedProcesses = [];
             
-            // Sort by arrival time
+            
             const sortedProcesses = [...processes].sort((a, b) => a.arrivalTime - b.arrivalTime);
             
             sortedProcesses.forEach(proc => {
@@ -390,13 +388,13 @@
     let readyQueue = [];
     let processMap = {};
     
-    // Create a map of processes for easy access
+   
     processes.forEach(proc => {
         processMap[proc.processId] = {...proc};
     });
     
     while (Object.keys(processMap).length > 0 || readyQueue.length > 0) {
-        // Add arriving processes to ready queue
+        
         Object.keys(processMap).forEach(pid => {
             const proc = processMap[pid];
             if (proc.arrivalTime <= currentTime) {
@@ -406,12 +404,12 @@
         });
         
         if (readyQueue.length === 0) {
-            // No processes ready, advance time
+       
             currentTime++;
             continue;
         }
         
-        // Sort ready queue based on remaining time (SJF)
+        
         readyQueue.sort((a, b) => {
             if (a.remainingTime !== b.remainingTime) {
                 return a.remainingTime - b.remainingTime;
@@ -422,7 +420,7 @@
         const currentProc = readyQueue[0];
         
         if (preemptive) {
-            // Execute for 1 unit of time
+        
             const startTime = currentTime;
             currentTime++;
             currentProc.remainingTime--;
@@ -435,7 +433,7 @@
             });
             
             if (currentProc.remainingTime === 0) {
-                // Process completed
+              
                 completedProcesses.push({
                     ...currentProc,
                     completionTime: currentTime,
@@ -444,11 +442,10 @@
                 });
                 readyQueue.shift();
             } else {
-                // Process still has remaining time, may be preempted
-                // Don't remove from queue - will be re-sorted next iteration
+
             }
         } else {
-            // Non-preemptive - execute entire burst
+          
             const startTime = currentTime;
             currentTime += currentProc.remainingTime;
             currentProc.remainingTime = 0;
@@ -485,12 +482,12 @@
             let readyQueue = [];
             let processMap = {};
             
-            // Create a map of processes for easy access
+       
             processes.forEach(proc => {
                 processMap[proc.processId] = {...proc};
             });
             
-            // Initialize ready queue with processes that arrive at time 0
+          
             processes.forEach(proc => {
                 if (proc.arrivalTime === 0) {
                     readyQueue.push({...proc});
@@ -498,7 +495,7 @@
             });
             
             while (readyQueue.length > 0 || Object.keys(processMap).length > 0) {
-                // Add arriving processes to ready queue
+               
                 Object.keys(processMap).forEach(pid => {
                     const proc = processMap[pid];
                     if (proc.arrivalTime <= currentTime && !readyQueue.some(p => p.processId === pid)) {
@@ -507,7 +504,7 @@
                 });
                 
                 if (readyQueue.length === 0) {
-                    // No processes ready, advance time
+                   
                     currentTime++;
                     continue;
                 }
@@ -527,7 +524,7 @@
                 });
                 
                 if (currentProc.remainingTime === 0) {
-                    // Process completed
+                   
                     completedProcesses.push({
                         ...currentProc,
                         completionTime: currentTime,
@@ -536,7 +533,7 @@
                     });
                     delete processMap[currentProc.processId];
                 } else {
-                    // Process still has remaining time, put back in queue
+                    
                     readyQueue.push(currentProc);
                 }
             }
@@ -554,13 +551,13 @@
     let readyQueue = [];
     let processMap = {};
     
-    // Create a map of processes for easy access
+  
     processes.forEach(proc => {
         processMap[proc.processId] = {...proc};
     });
     
     while (Object.keys(processMap).length > 0 || readyQueue.length > 0) {
-        // Add arriving processes to ready queue
+       
         Object.keys(processMap).forEach(pid => {
             const proc = processMap[pid];
             if (proc.arrivalTime <= currentTime) {
@@ -570,12 +567,12 @@
         });
         
         if (readyQueue.length === 0) {
-            // No processes ready, advance time
+         
             currentTime++;
             continue;
         }
         
-        // Sort ready queue based on priority (lower number = higher priority)
+      
         readyQueue.sort((a, b) => {
             if (a.priority !== b.priority) {
                 return a.priority - b.priority;
@@ -586,7 +583,7 @@
         const currentProc = readyQueue[0];
         
         if (preemptive) {
-            // Execute for 1 unit of time
+          
             const startTime = currentTime;
             currentTime++;
             currentProc.remainingTime--;
@@ -599,7 +596,7 @@
             });
             
             if (currentProc.remainingTime === 0) {
-                // Process completed
+              
                 completedProcesses.push({
                     ...currentProc,
                     completionTime: currentTime,
@@ -608,11 +605,10 @@
                 });
                 readyQueue.shift();
             } else {
-                // Process still has remaining time, may be preempted
-                // Don't remove from queue - will be re-sorted next iteration
+               
             }
         } else {
-            // Non-preemptive - execute entire burst
+           
             const startTime = currentTime;
             currentTime += currentProc.remainingTime;
             currentProc.remainingTime = 0;
@@ -664,7 +660,7 @@
                 tableBody.innerHTML += row;
             });
 
-            // Update average metrics
+           
             document.getElementById("avgTAT").textContent = (totalTAT/results.processes.length).toFixed(2);
             document.getElementById("avgWT").textContent = (totalWT/results.processes.length).toFixed(2);
             document.getElementById("avgMetrics").classList.remove("hidden");
@@ -697,7 +693,7 @@
                 container.appendChild(bar);
             });
             
-            // Add time markers
+           
             const timeMarkers = document.createElement("div");
             timeMarkers.className = "flex justify-between text-xs text-gray-700 mt-2";
             
@@ -713,12 +709,12 @@
         function renderGanttChart(timeline) {
             const ctx = document.getElementById('ganttChart').getContext('2d');
             
-            // Destroy previous chart if exists
+            
             if (chartInstance) {
                 chartInstance.destroy();
             }
             
-            // Prepare data for chart
+           
             const labels = timeline.map(item => `${item.processId} (${item.start}-${item.end})`);
             const durations = timeline.map(item => item.end - item.start);
             const colors = timeline.map((_, i) => {
